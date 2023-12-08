@@ -8,12 +8,13 @@ import {
 } from "@react-navigation/native";
 
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import { Appearance } from "react-native";
+import { Appearance, Image, View } from "react-native";
 
 import {
   adaptNavigationTheme,
   BottomNavigation,
   Provider,
+  Text,
 } from "react-native-paper";
 
 import { useFonts, Pacifico_400Regular } from "@expo-google-fonts/pacifico";
@@ -100,6 +101,32 @@ const TabNavigator = ({ navigation }) => {
   );
 };
 
+function LogoTitle() {
+  return (
+    <View
+      style={{
+        flexDirection: "row",
+        justifyContent: "center",
+      }}
+    >
+      <Image
+        style={{ width: 50, height: 50 }}
+        source={require("./assets/logo.png")}
+      />
+      <Text
+        variant="headlineMedium"
+        style={{
+          fontFamily: "Pacifico_400Regular",
+          textAlignVertical: "bottom",
+          height: 50,
+        }}
+      >
+        Croc-Lov
+      </Text>
+    </View>
+  );
+}
+
 const Stack = createNativeStackNavigator();
 
 export default function App() {
@@ -119,8 +146,23 @@ export default function App() {
         >
           <Stack.Screen name="Login" component={LoginScreen} />
           <Stack.Screen name="SignUp" component={SignUpScreen} />
-          <Stack.Screen name="TabNavigator" component={TabNavigator} />
-          <Stack.Screen name="AccountScreen" component={AccountScreen} />
+          <Stack.Screen
+            name="TabNavigator"
+            component={TabNavigator}
+            options={{
+              headerShown: true,
+              headerTitleAlign: "center",
+
+              headerStyle: {
+                backgroundColor:
+                  colorScheme === "dark"
+                    ? "rgb(54, 47, 44)"
+                    : "rgb(251, 238, 233)",
+              },
+              headerBackVisible: false,
+              headerTitle: (props) => <LogoTitle {...props} />,
+            }}
+          />
         </Stack.Navigator>
       </NavigationContainer>
     </Provider>

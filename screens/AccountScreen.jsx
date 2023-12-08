@@ -21,31 +21,6 @@ export default function AccountScreen() {
       <StatusBar
         barStyle={colorScheme === "dark" ? "light-content" : "dark-content"}
       />
-      <View
-        style={{
-          flexDirection: "row",
-          justifyContent: "center",
-          backgroundColor:
-            colorScheme === "dark" ? "rgb(54, 47, 44)" : "rgb(251, 238, 233)",
-          paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0,
-          width: "100%",
-        }}
-      >
-        <Image
-          style={{ width: 50, height: 50 }}
-          source={require("../assets/logo.png")}
-        />
-        <Text
-          variant="headlineMedium"
-          style={{
-            fontFamily: "Pacifico_400Regular",
-            textAlignVertical: "bottom",
-            height: 50,
-          }}
-        >
-          Croc-Lov
-        </Text>
-      </View>
       <Text>AccoutScreen</Text>
     </View>
   );

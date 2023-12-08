@@ -1,3 +1,5 @@
+import React, { useState } from "react";
+
 import {
   View,
   StyleSheet,
@@ -9,6 +11,7 @@ import {
   Keyboard,
   Appearance,
 } from "react-native";
+
 import {
   HelperText,
   Text,
@@ -17,17 +20,17 @@ import {
   Card,
   Surface,
 } from "react-native-paper";
+
 // import { useDispatch } from "react-redux";
-// import { addEmail } from "./reducers/users";
+
+// Import custom theme
 import lightTheme from "../theme/lightTheme";
 import darkTheme from "../theme/darkTheme";
 
-import React, { useState } from "react";
-
+// Swtich color scheme based on system settings
 let colorTheme;
 const colorScheme = Appearance.getColorScheme();
 if (colorScheme === "dark") {
-  // Use dark color scheme
   colorTheme = darkTheme.colors;
 } else {
   colorTheme = lightTheme.colors;
@@ -77,12 +80,13 @@ export default function HomeScreen({ navigation }) {
                 height: "100%",
                 width: "100%",
               }}
+              blurRadius={1}
             />
             <View
               style={{
                 position: "absolute",
                 backgroundColor: "black",
-                opacity: colorScheme === "dark" ? 0.75 : 0,
+                opacity: colorScheme === "dark" ? 0.5 : 0,
                 zIndex: 1,
                 height: "100%",
                 width: "100%",

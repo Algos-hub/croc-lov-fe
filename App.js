@@ -1,38 +1,41 @@
 import * as React from "react";
+import merge from "deepmerge";
+
 import {
   NavigationContainer,
   DarkTheme as NavigationDarkTheme,
   DefaultTheme as NavigationDefaultTheme,
 } from "@react-navigation/native";
+
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import { Appearance } from "react-native";
+
 import {
   adaptNavigationTheme,
   BottomNavigation,
-  configureFonts,
   Provider,
-  IconButton,
-  Text,
 } from "react-native-paper";
-import merge from "deepmerge";
 
 import { useFonts, Pacifico_400Regular } from "@expo-google-fonts/pacifico";
 
-import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import { Appearance, Image, View } from "react-native";
+// Importing custom themes
 import lightTheme from "./theme/lightTheme";
 import darkTheme from "./theme/darkTheme";
 
+// Importing screens
 import LoginScreen from "./screens/LoginScreen";
 import SignUpScreen from "./screens/SignUpScreen";
 import HomeScreen from "./screens/HomeScreen";
 import MessageScreen from "./screens/MessageScreen";
+import AccountScreen from "./screens/AccountScreen";
 
 // import { Provider as StoreProvider } from "react-redux";
 // import { configureStore } from "@reduxjs/toolkit";
-// import user from "./screens/reducers/users";
 // const store = configureStore({
 //   reducer: { user },
 // });
 
+// Defining the custom system themes
 const applyLightTheme = {
   colors: lightTheme.colors,
 };
@@ -48,18 +51,24 @@ const { LightTheme, DarkTheme } = adaptNavigationTheme({
 const CombinedDefaultTheme = merge(applyLightTheme, LightTheme);
 const CombinedDarkTheme = merge(applyDarkTheme, DarkTheme);
 
+// Swtich color scheme based on system settings
 let colorTheme;
 const colorScheme = Appearance.getColorScheme();
 if (colorScheme === "dark") {
-  // Use dark color scheme
   colorTheme = CombinedDarkTheme;
 } else {
   colorTheme = CombinedDefaultTheme;
 }
 
-const TabNavigator = () => {
-  const [index, setIndex] = React.useState(0);
+const TabNavigator = ({ navigation }) => {
+  const [index, setIndex] = React.useState(1);
   const [routes] = React.useState([
+    {
+      key: "account",
+      title: "Account",
+      focusedIcon: "account-circle",
+      unfocusedIcon: "account-circle-outline",
+    },
     {
       key: "home",
       title: "Home",
@@ -71,42 +80,24 @@ const TabNavigator = () => {
       title: "Messages",
       focusedIcon: "message-text",
       unfocusedIcon: "message-text-outline",
+      // badge: true,
     },
   ]);
 
   const renderScene = BottomNavigation.SceneMap({
     home: HomeScreen,
     message: MessageScreen,
+    account: AccountScreen,
   });
-  const [active, setActive] = React.useState("");
 
   return (
     <BottomNavigation
       navigationState={{ index, routes }}
+      shifting={true}
       onIndexChange={setIndex}
       renderScene={renderScene}
     />
   );
-};
-
-const fontConfig = {
-  customVariant: {
-    fontFamily: "",
-    fontWeight: "400",
-    letterSpacing: 0.5,
-    lineHeight: 22,
-    fontSize: 20,
-  },
-};
-
-const lightThemeFont = {
-  ...lightTheme,
-  fonts: configureFonts({ config: fontConfig }),
-};
-
-const darkThemeFont = {
-  ...darkTheme,
-  fonts: configureFonts({ config: fontConfig }),
 };
 
 const Stack = createNativeStackNavigator();
@@ -122,62 +113,14 @@ export default function App() {
     // <StoreProvider store={store}>
     <Provider theme={colorTheme}>
       <NavigationContainer theme={colorTheme}>
-        <Stack.Navigator initialRouteName="Home">
-          <Stack.Screen
-            name="Login"
-            component={LoginScreen}
-            options={{ headerShown: false }}
-          />
-          <Stack.Screen
-            name="SignUp"
-            component={SignUpScreen}
-            options={{ headerShown: false }}
-          />
-          <Stack.Screen
-            name="TabNavigator"
-            component={TabNavigator}
-            options={{
-              headerBackVisible: false,
-              title: "",
-              headerStyle: {
-                backgroundColor:
-                  colorScheme === "dark"
-                    ? "rgb(54, 47, 44)"
-                    : "rgb(251, 238, 233)",
-              },
-              headerLeft: () => (
-                <View
-                  style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                  }}
-                >
-                  <Image
-                    style={{ width: 50, height: 50 }}
-                    source={require("./assets/logo.png")}
-                  />
-                  <Text
-                    variant="headlineMedium"
-                    style={{
-                      fontFamily: "Pacifico_400Regular",
-                      textAlignVertical: "bottom",
-                      height: 50,
-                    }}
-                  >
-                    Croc-Lov
-                  </Text>
-                </View>
-              ),
-              headerRight: () => (
-                <IconButton
-                  icon="account-circle"
-                  onPress={() => alert("This is a button!")}
-                  size={30}
-                  style={{ margin: 0 }}
-                />
-              ),
-            }}
-          />
+        <Stack.Navigator
+          initialRouteName="Login"
+          screenOptions={{ headerShown: false }}
+        >
+          <Stack.Screen name="Login" component={LoginScreen} />
+          <Stack.Screen name="SignUp" component={SignUpScreen} />
+          <Stack.Screen name="TabNavigator" component={TabNavigator} />
+          <Stack.Screen name="AccountScreen" component={AccountScreen} />
         </Stack.Navigator>
       </NavigationContainer>
     </Provider>

@@ -1,123 +1,109 @@
-import { View, StyleSheet, Appearance, ScrollView } from "react-native";
-import { Card, IconButton, Menu, Avatar } from "react-native-paper";
+import React from "react";
+
+import {
+  View,
+  StyleSheet,
+  Appearance,
+  ScrollView,
+  StatusBar,
+  Image,
+} from "react-native";
+
+import { Card, IconButton, Menu, Avatar, Text } from "react-native-paper";
+
+// Import custom theme
 import lightTheme from "../theme/lightTheme";
 import darkTheme from "../theme/darkTheme";
 
-import React from "react";
-
+// Swtich color scheme based on system settings
 let colorTheme;
 const colorScheme = Appearance.getColorScheme();
 if (colorScheme === "dark") {
-  // Use dark color scheme
   colorTheme = darkTheme.colors;
 } else {
   colorTheme = lightTheme.colors;
 }
 
-export default function MessageScreen() {
-  const [visible, setVisible] = React.useState(false);
+export default function MessageScreen({ navigation }) {
+  const messagesArray = [1, 2, 3, 4, 5, 6, 7, 8, 9, 1, 2, 2, 5, 2, 3];
+  const displayMessagesArray = messagesArray.map((el, i) => {
+    const [visible, setVisible] = React.useState(false);
 
-  const openMenu = () => setVisible(true);
+    const openMenu = () => setVisible(true);
 
-  const closeMenu = () => setVisible(false);
+    const closeMenu = () => setVisible(false);
 
+    return (
+      <Card.Title
+        key={i}
+        title="Name"
+        theme={colorTheme}
+        subtitle="Latest Message"
+        left={(props) => (
+          <Avatar.Image
+            {...props}
+            source={require("../assets/background.jpg")}
+          />
+        )}
+        right={(props) => (
+          <Menu
+            visible={visible}
+            onDismiss={closeMenu}
+            anchor={
+              <IconButton
+                icon="dots-vertical"
+                size={30}
+                onPress={() => openMenu()}
+              />
+            }
+          >
+            <Menu.Item
+              onPress={() => closeMenu()}
+              leadingIcon="close-circle-outline"
+              title="Delete"
+            />
+          </Menu>
+        )}
+      />
+    );
+  });
   return (
     <View style={styles.container}>
+      <StatusBar
+        barStyle={colorScheme === "dark" ? "light-content" : "dark-content"}
+      />
+      <View
+        style={{
+          flexDirection: "row",
+          justifyContent: "center",
+          backgroundColor:
+            colorScheme === "dark" ? "rgb(54, 47, 44)" : "rgb(251, 238, 233)",
+          paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0,
+          width: "100%",
+        }}
+      >
+        <Image
+          style={{ width: 50, height: 50 }}
+          source={require("../assets/logo.png")}
+        />
+        <Text
+          variant="headlineMedium"
+          style={{
+            fontFamily: "Pacifico_400Regular",
+            textAlignVertical: "bottom",
+            height: 50,
+          }}
+        >
+          Croc-Lov
+        </Text>
+      </View>
       <ScrollView
         contentContainerStyle={{ alignItems: "center" }}
         style={{
           width: "100%",
         }}
       >
-        <Card.Title
-          title="Name"
-          theme={colorTheme}
-          subtitle="Latest Message"
-          left={(props) => (
-            <Avatar.Image
-              {...props}
-              source={require("../assets/background.jpg")}
-            />
-          )}
-          right={(props) => (
-            <Menu
-              visible={visible}
-              onDismiss={closeMenu}
-              anchor={
-                <IconButton
-                  icon="dots-vertical"
-                  size={30}
-                  onPress={() => openMenu()}
-                />
-              }
-            >
-              <Menu.Item
-                onPress={() => {}}
-                leadingIcon="eye-off"
-                title="Hide"
-              />
-            </Menu>
-          )}
-        />
-        <Card.Title
-          title="Name"
-          subtitle="Latest Message"
-          left={(props) => (
-            <Avatar.Image
-              {...props}
-              source={require("../assets/background.jpg")}
-            />
-          )}
-          right={(props) => (
-            <Menu
-              visible={visible}
-              onDismiss={closeMenu}
-              anchor={
-                <IconButton
-                  icon="dots-vertical"
-                  size={30}
-                  onPress={() => openMenu()}
-                />
-              }
-            >
-              <Menu.Item
-                onPress={() => {}}
-                leadingIcon="eye-off"
-                title="Hide"
-              />
-            </Menu>
-          )}
-        />
-        <Card.Title
-          title="Name"
-          onPr
-          subtitle="Latest Message"
-          left={(props) => (
-            <Avatar.Image
-              {...props}
-              source={require("../assets/background.jpg")}
-            />
-          )}
-          right={(props) => (
-            <Menu
-              visible={visible}
-              onDismiss={closeMenu}
-              anchor={
-                <IconButton
-                  icon="dots-vertical"
-                  size={30}
-                  onPress={() => openMenu()}
-                />
-              }
-            >
-              <Menu.Item
-                onPress={() => {}}
-                leadingIcon="eye-off"
-                title="Hide"
-              />
-            </Menu>
-          )}
-        />
+        {displayMessagesArray}
       </ScrollView>
     </View>
   );

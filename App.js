@@ -18,7 +18,7 @@ import {
 } from "react-native-paper";
 
 import { useFonts, Pacifico_400Regular } from "@expo-google-fonts/pacifico";
-
+import "./config/firebase";
 // Importing custom themes
 import lightTheme from "./theme/lightTheme";
 import darkTheme from "./theme/darkTheme";
@@ -29,6 +29,8 @@ import SignUpScreen from "./screens/SignUpScreen";
 import HomeScreen from "./screens/HomeScreen";
 import MessageScreen from "./screens/MessageScreen";
 import AccountScreen from "./screens/AccountScreen";
+import DiscussionScreen from "./screens/DiscussionScreen";
+// import { useAuthentication } from "../utils/hooks/useAuthentication";
 
 // import { Provider as StoreProvider } from "react-redux";
 // import { configureStore } from "@reduxjs/toolkit";
@@ -61,7 +63,7 @@ if (colorScheme === "dark") {
   colorTheme = CombinedDefaultTheme;
 }
 
-const TabNavigator = ({ navigation }) => {
+const TabNavigator = ({ props }) => {
   const [index, setIndex] = React.useState(1);
   const [routes] = React.useState([
     {
@@ -69,18 +71,21 @@ const TabNavigator = ({ navigation }) => {
       title: "Account",
       focusedIcon: "account-circle",
       unfocusedIcon: "account-circle-outline",
+      props: props,
     },
     {
       key: "home",
       title: "Home",
       focusedIcon: "home",
       unfocusedIcon: "home-outline",
+      props: props,
     },
     {
       key: "message",
       title: "Messages",
       focusedIcon: "message-text",
       unfocusedIcon: "message-text-outline",
+      props: props,
       // badge: true,
     },
   ]);
@@ -130,6 +135,7 @@ function LogoTitle() {
 const Stack = createNativeStackNavigator();
 
 export default function App() {
+  // const { user } = useAuthentication();
   let [fontsLoaded] = useFonts({
     Pacifico_400Regular,
   });
@@ -146,6 +152,19 @@ export default function App() {
         >
           <Stack.Screen name="Login" component={LoginScreen} />
           <Stack.Screen name="SignUp" component={SignUpScreen} />
+          <Stack.Screen
+            name="Discussion"
+            component={DiscussionScreen}
+            options={{
+              headerShown: true,
+              headerStyle: {
+                backgroundColor:
+                  colorScheme === "dark"
+                    ? "rgb(54, 47, 44)"
+                    : "rgb(251, 238, 233)",
+              },
+            }}
+          />
           <Stack.Screen
             name="TabNavigator"
             component={TabNavigator}

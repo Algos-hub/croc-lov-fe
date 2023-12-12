@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 
 import {
   View,
@@ -6,10 +6,19 @@ import {
   Appearance,
   ScrollView,
   StatusBar,
-  Image,
 } from "react-native";
 
-import { Card, IconButton, Menu, Avatar, Text } from "react-native-paper";
+import {
+  Card,
+  IconButton,
+  Menu,
+  Avatar,
+  TouchableRipple,
+} from "react-native-paper";
+import { useNavigation } from "@react-navigation/native";
+import { getAuth } from "firebase/auth";
+import { collection, query, where, onSnapshot } from "firebase/firestore";
+import { database } from "../config/firebase";
 
 // Import custom theme
 import lightTheme from "../theme/lightTheme";
@@ -24,48 +33,66 @@ if (colorScheme === "dark") {
   colorTheme = lightTheme.colors;
 }
 
-export default function MessageScreen({ navigation }) {
-  const messagesArray = [1, 2, 3, 4, 5, 6, 7, 8, 9, 1, 2, 2, 5, 2, 3];
-  const displayMessagesArray = messagesArray.map((el, i) => {
-    const [visible, setVisible] = React.useState(false);
+export default function MessageScreen() {
+  const navigation = useNavigation();
+  const auth = getAuth();
+  const [users, setUsers] = useState([]);
+  const [currentUser, setCurrentUser] = useState();
+  useEffect(() => {
+    const collectionRef = collection(database, "users");
+    const q = query(collectionRef, where("uid", "!=", auth.currentUser.uid));
 
-    const openMenu = () => setVisible(true);
+    onSnapshot(q, (querySnapshot) => {
+      setUsers(
+        querySnapshot.docs.map((doc) => ({
+          uid: doc.data().uid,
+          displayName: doc.data().displayName,
+          photoURL: doc.data().photoURL,
+          likes: doc.data().likes,
+        }))
+      );
+    });
+  }, []);
+  useEffect(() => {
+    const collectionRef = collection(database, "users");
+    const q = query(collectionRef, where("uid", "==", auth.currentUser.uid));
 
-    const closeMenu = () => setVisible(false);
-
-    return (
-      <Card.Title
-        key={i}
-        title="Name"
-        theme={colorTheme}
-        subtitle="Latest Message"
-        left={(props) => (
-          <Avatar.Image
-            {...props}
-            source={require("../assets/background.jpg")}
+    onSnapshot(q, (querySnapshot) => {
+      setCurrentUser(
+        ...querySnapshot.docs.map((doc) => ({
+          uid: doc.data().uid,
+          displayName: doc.data().displayName,
+          photoURL: doc.data().photoURL,
+          likes: doc.data().likes,
+        }))
+      );
+    });
+  }, []);
+  console.log(users);
+  console.log(currentUser);
+  const displayMessagesArray = users.map((el, i) => {
+    if (
+      el.likes.includes(auth.currentUser.uid) &&
+      currentUser?.likes?.includes(el.uid)
+    ) {
+      return (
+        <TouchableRipple
+          style={{ width: "100%" }}
+          onPress={() => navigation.navigate("Discussion")}
+          rippleColor="rgba(0, 0, 0, .32)"
+          key={i}
+        >
+          <Card.Title
+            title={el.displayName}
+            theme={colorTheme}
+            subtitle="Latest Message"
+            left={(props) => (
+              <Avatar.Image {...props} source={{ uri: el.photoURL }} />
+            )}
           />
-        )}
-        right={(props) => (
-          <Menu
-            visible={visible}
-            onDismiss={closeMenu}
-            anchor={
-              <IconButton
-                icon="dots-vertical"
-                size={30}
-                onPress={() => openMenu()}
-              />
-            }
-          >
-            <Menu.Item
-              onPress={() => closeMenu()}
-              leadingIcon="close-circle-outline"
-              title="Delete"
-            />
-          </Menu>
-        )}
-      />
-    );
+        </TouchableRipple>
+      );
+    }
   });
   return (
     <View style={styles.container}>

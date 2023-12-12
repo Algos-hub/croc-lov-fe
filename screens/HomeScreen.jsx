@@ -1,21 +1,34 @@
-import React from "react";
+import React, { useState, useEffect, useCallback } from "react";
 
 import {
   View,
   StyleSheet,
   Appearance,
   ScrollView,
-  Image,
   StatusBar,
-  Button,
 } from "react-native";
 
-import { Card, IconButton, Menu, Text } from "react-native-paper";
+import { Card, IconButton } from "react-native-paper";
+
+import { getAuth } from "firebase/auth";
+
+import {
+  collection,
+  query,
+  where,
+  onSnapshot,
+  arrayUnion,
+  doc,
+  updateDoc,
+  arrayRemove,
+  addDoc,
+} from "firebase/firestore";
 
 // Import custom theme
 import lightTheme from "../theme/lightTheme";
 import darkTheme from "../theme/darkTheme";
-
+// import firestore from "@react-native-firebase/firestore";
+import { database } from "../config/firebase";
 // Swtich color scheme based on system settings
 let colorTheme;
 const colorScheme = Appearance.getColorScheme();
@@ -25,84 +38,117 @@ if (colorScheme === "dark") {
   colorTheme = lightTheme.colors;
 }
 
-export default function HomeScreen({ navigation }) {
-  const cardArray = [1, 2, 3, 4, 5, 6];
+export default function HomeScreen() {
+  const auth = getAuth();
+  const [userCard, setUserCard] = useState([]);
+  const [currentUser, setCurrentUser] = useState();
+  useEffect(() => {
+    const collectionRef = collection(database, "users");
+    const q = query(collectionRef, where("uid", "!=", auth.currentUser.uid));
 
-  const displayCardArray = cardArray.map((el, i) => {
-    const [visible, setVisible] = React.useState(false);
+    onSnapshot(q, (querySnapshot) => {
+      setUserCard(
+        querySnapshot.docs.map((doc) => ({
+          uid: doc.data().uid,
+          description: doc.data().description,
+          displayName: doc.data().displayName,
+          photoURL: doc.data().photoURL,
+          likes: doc.data().likes,
+        }))
+      );
+    });
+  }, []);
+  useEffect(() => {
+    const collectionRef = collection(database, "users");
+    const q = query(collectionRef, where("uid", "==", auth.currentUser.uid));
 
-    const openMenu = () => setVisible(true);
+    onSnapshot(q, (querySnapshot) => {
+      setCurrentUser(
+        ...querySnapshot.docs.map((doc) => ({
+          uid: doc.data().uid,
+          description: doc.data().description,
+          displayName: doc.data().displayName,
+          photoURL: doc.data().photoURL,
+          likes: doc.data().likes,
+        }))
+      );
+    });
+  }, []);
+  async function addLike(el) {
+    const accountRef = doc(database, "users", auth.currentUser.uid);
+    await updateDoc(accountRef, {
+      likes: arrayUnion(el.uid),
+    });
+    if (
+      el.likes.includes(auth.currentUser.uid) &&
+      currentUser?.likes?.includes(el.uid)
+    ) {
+      addDoc(collection(database, "messages"), {
+        latestMessage: { createdAt, text },
+        users: [el.uid, auth.currentUser.uid],
+      });
+    }
+  }
+  async function removeLike(uid) {
+    const accountRef = doc(database, "users", auth.currentUser.uid);
+    await updateDoc(accountRef, {
+      likes: arrayRemove(uid),
+    });
+  }
 
-    const closeMenu = () => setVisible(false);
-    return (
-      <Card
-        key={i}
-        style={{
-          width: "80%",
-          height: 400,
-          marginVertical: 25,
-        }}
-        mode="contained"
-      >
-        <Card.Cover
-          style={{
-            height: "65%",
-          }}
-          source={{ uri: "https://picsum.photos/700" }}
-        />
-        <Card.Title title="Name" subtitle="Short Description" />
-        <Card.Content
-          style={{
-            flexDirection: "row",
-            justifyContent: "space-between",
-            alignItems: "center",
-          }}
-        >
-          <Menu
-            key={i}
-            visible={visible}
-            onDismiss={closeMenu}
-            anchor={
+  const displayCardArray = userCard.map((el, i) => {
+    if (el.uid !== auth.currentUser.uid) {
+      return (
+        <Card key={i} style={styles.card} mode="contained">
+          <Card.Cover
+            style={{
+              height: "75%",
+            }}
+            source={{ uri: el.photoURL }}
+          />
+          <Card.Title title={el.displayName} subtitle={el.description} />
+          <Card.Actions>
+            <View style={styles.cardButtons}>
               <IconButton
-                key={i}
-                icon="dots-vertical"
-                size={30}
-                onPress={() => openMenu()}
-                style={{ marginLeft: -10 }}
+                icon="close-circle-outline"
+                size={40}
+                onPress={() => {
+                  removeLike(el.uid);
+                }}
               />
-            }
-          >
-            <Menu.Item
-              onPress={() => closeMenu()}
-              leadingIcon="eye-off"
-              title="Hide"
-            />
-          </Menu>
-          <View style={{ flexDirection: "row" }}>
-            <IconButton
-              icon="close-circle-outline"
-              size={40}
-              onPress={() => console.log("Pressed")}
-            />
-            <IconButton
-              icon="heart-outline"
-              size={40}
-              onPress={() => console.log("Pressed")}
-              style={{ marginRight: -10 }}
-            />
-          </View>
-        </Card.Content>
-      </Card>
-    );
+              <IconButton
+                icon={
+                  !currentUser?.likes?.includes(el.uid)
+                    ? "heart-outline"
+                    : "heart"
+                }
+                size={40}
+                onPress={() => {
+                  addLike(el);
+                  // if (
+                  //   el.likes.includes(auth.currentUser.uid) &&
+                  //   currentUser?.likes?.includes(el.uid)
+                  // ) {
+                  //   addDoc(collection(database, "messages"), {
+                  //     latestMessage: { createdAt, text },
+                  //     users: [el.uid, auth.currentUser.uid],
+                  //   });
+                  // }
+                }}
+              />
+            </View>
+          </Card.Actions>
+        </Card>
+      );
+    }
   });
-
   return (
     <View style={styles.container}>
       <StatusBar
         barStyle={colorScheme === "dark" ? "light-content" : "dark-content"}
       />
       <ScrollView
-        contentContainerStyle={{ alignItems: "center" }}
+        contentContainerStyle={{ alignItems: "center", paddingVertical: 25 }}
         style={{
           width: "100%",
         }}
@@ -116,5 +162,15 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     alignItems: "center",
+  },
+  card: {
+    width: "80%",
+    height: 600,
+    marginVertical: 25,
+  },
+  cardButtons: {
+    width: "100%",
+    flexDirection: "row",
+    justifyContent: "flex-end",
   },
 });

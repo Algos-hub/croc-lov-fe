@@ -78,7 +78,7 @@ export default function MessageScreen() {
       return (
         <TouchableRipple
           style={{ width: "100%" }}
-          onPress={() => navigation.navigate("Discussion")}
+          onPress={() => navigation.navigate("Discussion", { thread: el })}
           rippleColor="rgba(0, 0, 0, .32)"
           key={i}
         >

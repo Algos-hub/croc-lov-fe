@@ -13,6 +13,8 @@ import {
   query,
   where,
   onSnapshot,
+  or,
+  and,
 } from "firebase/firestore";
 import { database } from "../config/firebase";
 
@@ -29,7 +31,8 @@ if (colorScheme === "dark") {
   colorTheme = lightTheme.colors;
 }
 
-export default function DiscussionScreen() {
+export default function DiscussionScreen({ route }) {
+  const { thread } = route.params;
   const [messages, setMessages] = useState([]);
   const [text, setText] = useState("");
   const [name, setName] = useState("");
@@ -49,7 +52,22 @@ export default function DiscussionScreen() {
 
   useEffect(() => {
     const collectionRef = collection(database, "messages");
-    const q = query(collectionRef, orderBy("createdAt", "desc"));
+    const q = query(
+      collectionRef,
+      or(
+        and(
+          where("user._id", "==", thread.uid),
+          where("recipient", "==", auth.currentUser.uid)
+        ),
+        and(
+          where("user._id", "==", auth.currentUser.uid),
+          where("recipient", "==", thread.uid)
+        )
+      ),
+      orderBy("createdAt", "desc")
+    );
+    console.log(q);
+    console.log(thread.uid);
 
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
       setMessages(
@@ -57,6 +75,7 @@ export default function DiscussionScreen() {
           _id: doc.data()._id,
           createdAt: doc.data().createdAt.toDate(),
           text: doc.data().text,
+          recipient: doc.data().recipient,
           user: doc.data().user,
         }))
       );
@@ -69,11 +88,12 @@ export default function DiscussionScreen() {
     setMessages((previousMessages) =>
       GiftedChat.append(previousMessages, messages)
     );
-    const { _id, createdAt, text, user } = messages;
+    const { _id, createdAt, text, user, recipient } = messages;
     addDoc(collection(database, "messages"), {
       _id,
       createdAt,
       text,
+      recipient,
       user,
     });
   }, []);
@@ -119,8 +139,9 @@ export default function DiscussionScreen() {
                   _id: Math.round(Math.random() * 1000000),
                   text: text,
                   createdAt: new Date(),
+                  recipient: thread.uid,
                   user: {
-                    _id: auth?.currentUser?.email,
+                    _id: auth?.currentUser?.uid,
                     avatar: avatar,
                     name: name,
                   },
@@ -149,7 +170,7 @@ export default function DiscussionScreen() {
         onSend={(messages) => onSend(messages)}
         dateFormat="lll"
         user={{
-          _id: auth?.currentUser?.email,
+          _id: auth.currentUser.uid,
           avatar: "https://i.pravatar.cc/300",
         }}
         renderTime={() => null}

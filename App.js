@@ -15,6 +15,7 @@ import {
   BottomNavigation,
   Provider,
   Text,
+  Avatar,
 } from "react-native-paper";
 
 import { useFonts, Pacifico_400Regular } from "@expo-google-fonts/pacifico";
@@ -155,7 +156,8 @@ export default function App() {
           <Stack.Screen
             name="Discussion"
             component={DiscussionScreen}
-            options={{
+            options={({ route }) => ({
+              title: route.params.thread.displayName,
               headerShown: true,
               headerStyle: {
                 backgroundColor:
@@ -163,7 +165,24 @@ export default function App() {
                     ? "rgb(54, 47, 44)"
                     : "rgb(251, 238, 233)",
               },
-            }}
+              headerTitle: (props) => (
+                <View
+                  style={{
+                    flexDirection: "row",
+                    justifyContent: "center",
+                  }}
+                >
+                  <Avatar.Image
+                    {...props}
+                    size={35}
+                    source={{ uri: route.params.thread.photoURL }}
+                  />
+                  <Text variant="headlineSmall" style={{ marginLeft: 10 }}>
+                    {route.params.thread.displayName}
+                  </Text>
+                </View>
+              ),
+            })}
           />
           <Stack.Screen
             name="TabNavigator"

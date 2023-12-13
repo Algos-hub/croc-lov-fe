@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { View, StatusBar, Appearance, Image, StyleSheet } from "react-native";
 import { Text, Button, TextInput } from "react-native-paper";
 import { useNavigation } from "@react-navigation/native";
+import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scrollview";
 
 // Import custom theme
 import lightTheme from "../theme/lightTheme";
@@ -9,7 +10,7 @@ import darkTheme from "../theme/darkTheme";
 
 // import auth from "@react-native-firebase/auth";
 import { getAuth, signOut } from "firebase/auth";
-import { database } from "../config/firebase";
+import { database, storage } from "../config/firebase";
 import {
   collection,
   doc,
@@ -18,6 +19,9 @@ import {
   onSnapshot,
   where,
 } from "firebase/firestore";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import * as ImagePicker from "expo-image-picker";
+
 // Swtich color scheme based on system settings
 let colorTheme;
 const colorScheme = Appearance.getColorScheme();
@@ -38,6 +42,52 @@ export default function AccountScreen() {
   const [avatar, setAvatar] = useState(
     "'https://gravatar.com/avatar/94d45dbdba988afacf30d916e7aaad69?s=200&d=mp&r=x'"
   );
+  const pickImage = async () => {
+    // No permissions request is necessary for launching the image library
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.All,
+      allowsEditing: true,
+      aspect: [4, 4],
+      quality: 1,
+    });
+
+    handleImagePicked(result);
+  };
+
+  async function handleImagePicked(pickerResult) {
+    try {
+      if (!pickerResult.canceled) {
+        const uploadUrl = await uploadImageAsync(pickerResult.assets[0].uri);
+        const accountRef = doc(database, "users", auth.currentUser.uid);
+        await updateDoc(accountRef, {
+          photoURL: uploadUrl,
+        });
+      }
+    } catch (e) {
+      alert("Upload failed");
+    }
+  }
+
+  async function uploadImageAsync(uri) {
+    const blob = await new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.onload = function () {
+        resolve(xhr.response);
+      };
+      xhr.onerror = function (e) {
+        reject(new TypeError("Network request failed"));
+      };
+      xhr.responseType = "blob";
+      xhr.open("GET", uri, true);
+      xhr.send(null);
+    });
+
+    const fileRef = ref(storage, `userImages/${auth.currentUser.uid}`);
+    const result = await uploadBytes(fileRef, blob);
+    blob.close();
+
+    return await getDownloadURL(fileRef);
+  }
 
   useEffect(() => {
     const collectionRef = collection(database, "users");
@@ -66,13 +116,26 @@ export default function AccountScreen() {
         barStyle={colorScheme === "dark" ? "light-content" : "dark-content"}
       />
       <View style={styles.content}>
-        <View style={{ alignItems: "center" }}>
+        <View style={{ alignItems: "center", marginTop: 50 }}>
           <Image
             source={{ uri: avatar }}
             resizeMode="cover"
             style={styles.avatar}
           />
-          <Text variant="headlineMedium">{name}</Text>
+          <Button
+            mode="contained"
+            theme={{ colors: colorTheme }}
+            style={{ marginBottom: 20 }}
+            onPress={() => pickImage()}
+          >
+            Edit image
+          </Button>
+          <Text
+            variant="headlineMedium"
+            // style={{ display: changeDescription ? "none" : "flex" }}
+          >
+            {name}
+          </Text>
           <Text
             variant="titleLarge"
             style={{
@@ -104,22 +167,34 @@ export default function AccountScreen() {
             }}
           >
             <TextInput
-              label="Description"
+              label={`Description (${updateDescription.length}/250)`}
               value={updateDescription}
               mode="outlined"
-              outlineStyle={{ borderRadius: 50 }}
+              outlineStyle={{ borderRadius: 25 }}
               theme={{ colors: colorTheme }}
+              multiline={true}
               style={{
                 width: "100%",
-                paddingHorizontal: 10,
+                paddingHorizontal: 15,
+                paddingVertical: 0,
                 marginBottom: 40,
                 display: changeDescription ? "flex" : "none",
               }}
               onChangeText={(text) => {
-                setUpdateDescription(text);
+                if (updateDescription.length <= 250) {
+                  setUpdateDescription(text);
+                } else {
+                  setUpdateDescription(text.slice(0, -1));
+                }
               }}
             />
-            <View style={{ alignItems: "center", justifyContent: "center" }}>
+            <View
+              style={{
+                alignItems: "center",
+                justifyContent: "center",
+                marginTop: 50,
+              }}
+            >
               <Button
                 mode="contained"
                 theme={{ colors: colorTheme }}
@@ -157,12 +232,6 @@ export default function AccountScreen() {
           >
             Log Out
           </Button>
-          <Button
-            mode="contained-tonal"
-            onPress={() => navigation.navigate("Login")}
-          >
-            Delete Account
-          </Button>
         </View>
       </View>
     </View>
@@ -172,13 +241,11 @@ export default function AccountScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
+    // height: "100%",
   },
   content: {
     flex: 1,
     alignItems: "center",
-    justifyContent: "space-evenly",
     width: "100%",
   },
   avatar: { height: 150, width: 150, borderRadius: 100, marginBottom: 20 },

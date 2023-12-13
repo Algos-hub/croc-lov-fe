@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 
 import {
   View,
@@ -125,15 +125,6 @@ export default function HomeScreen() {
                 size={40}
                 onPress={() => {
                   addLike(el);
-                  // if (
-                  //   el.likes.includes(auth.currentUser.uid) &&
-                  //   currentUser?.likes?.includes(el.uid)
-                  // ) {
-                  //   addDoc(collection(database, "messages"), {
-                  //     latestMessage: { createdAt, text },
-                  //     users: [el.uid, auth.currentUser.uid],
-                  //   });
-                  // }
                 }}
               />
             </View>

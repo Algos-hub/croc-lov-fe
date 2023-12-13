@@ -17,7 +17,13 @@ import {
 } from "react-native-paper";
 import { useNavigation } from "@react-navigation/native";
 import { getAuth } from "firebase/auth";
-import { collection, query, where, onSnapshot } from "firebase/firestore";
+import {
+  collection,
+  query,
+  where,
+  onSnapshot,
+  orderBy,
+} from "firebase/firestore";
 import { database } from "../config/firebase";
 
 // Import custom theme
@@ -37,6 +43,7 @@ export default function MessageScreen() {
   const navigation = useNavigation();
   const auth = getAuth();
   const [users, setUsers] = useState([]);
+  const [lastMessages, setLastMessages] = useState([]);
   const [currentUser, setCurrentUser] = useState();
   useEffect(() => {
     const collectionRef = collection(database, "users");
@@ -54,9 +61,27 @@ export default function MessageScreen() {
     });
   }, []);
   useEffect(() => {
+    const collectionRef = collection(database, "messages");
+    const q = query(
+      collectionRef,
+      where("recipient", "==", auth.currentUser.uid),
+      orderBy("createdAt", "asc")
+    );
+
+    onSnapshot(q, (querySnapshot) => {
+      setLastMessages(
+        querySnapshot.docs.map((doc) => ({
+          recipient: doc.data().recipient,
+          createdAt: doc.data().createdAt,
+          sender: doc.data().user._id,
+          message: doc.data().text,
+        }))
+      );
+    });
+  }, []);
+  useEffect(() => {
     const collectionRef = collection(database, "users");
     const q = query(collectionRef, where("uid", "==", auth.currentUser.uid));
-
     onSnapshot(q, (querySnapshot) => {
       setCurrentUser(
         ...querySnapshot.docs.map((doc) => ({
@@ -68,13 +93,13 @@ export default function MessageScreen() {
       );
     });
   }, []);
-  console.log(users);
-  console.log(currentUser);
   const displayMessagesArray = users.map((el, i) => {
     if (
       el.likes.includes(auth.currentUser.uid) &&
       currentUser?.likes?.includes(el.uid)
     ) {
+      const lm = lastMessages.find((element) => element.sender === el.uid);
+
       return (
         <TouchableRipple
           style={{ width: "100%" }}
@@ -85,7 +110,8 @@ export default function MessageScreen() {
           <Card.Title
             title={el.displayName}
             theme={colorTheme}
-            subtitle="Latest Message"
+            subtitleStyle={{ fontStyle: lm ? "normal" : "italic" }}
+            subtitle={lm ? lm.message : "Send a message"}
             left={(props) => (
               <Avatar.Image {...props} source={{ uri: el.photoURL }} />
             )}

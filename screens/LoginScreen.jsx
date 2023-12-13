@@ -67,10 +67,8 @@ export default function HomeScreen({ navigation }) {
 
     try {
       await signInWithEmailAndPassword(auth, value.email, value.password);
-      console.log("connected");
       navigation.navigate("TabNavigator");
     } catch (error) {
-      console.log(error);
       setEmailError(true);
       setPasswordError(true);
     }

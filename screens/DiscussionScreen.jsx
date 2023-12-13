@@ -66,8 +66,6 @@ export default function DiscussionScreen({ route }) {
       ),
       orderBy("createdAt", "desc")
     );
-    console.log(q);
-    console.log(thread.uid);
 
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
       setMessages(

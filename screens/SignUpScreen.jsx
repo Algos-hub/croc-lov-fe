@@ -100,7 +100,6 @@ export default function HomeScreen({ navigation }) {
         navigation.navigate("TabNavigator");
       })
       .catch((error) => {
-        console.log(error);
         setEmailError(true);
         setPasswordError(true);
       });

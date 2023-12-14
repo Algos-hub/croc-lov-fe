@@ -96,7 +96,8 @@ export default function MessageScreen() {
   const displayMessagesArray = users.map((el, i) => {
     if (
       el.likes.includes(auth.currentUser.uid) &&
-      currentUser?.likes?.includes(el.uid)
+      currentUser?.likes?.includes(el.uid) &&
+      el.displayName !== null
     ) {
       const lm = lastMessages.find((element) => element.sender === el.uid);
 

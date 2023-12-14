@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import { View, StatusBar, Appearance, Image, StyleSheet } from "react-native";
 import { Text, Button, TextInput } from "react-native-paper";
 import { useNavigation } from "@react-navigation/native";
-import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scrollview";
 
 // Import custom theme
 import lightTheme from "../theme/lightTheme";

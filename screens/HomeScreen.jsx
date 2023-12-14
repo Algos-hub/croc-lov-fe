@@ -97,7 +97,7 @@ export default function HomeScreen() {
   }
 
   const displayCardArray = userCard.map((el, i) => {
-    if (el.uid !== auth.currentUser.uid) {
+    if (el.uid !== auth.currentUser.uid && el.displayName !== null) {
       return (
         <Card key={i} style={styles.card} mode="contained">
           <Card.Cover

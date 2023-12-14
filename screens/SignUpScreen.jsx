@@ -30,14 +30,7 @@ import {
 import lightTheme from "../theme/lightTheme";
 import darkTheme from "../theme/darkTheme";
 
-import {
-  collection,
-  addDoc,
-  query,
-  onSnapshot,
-  setDoc,
-  doc,
-} from "firebase/firestore";
+import { setDoc, doc } from "firebase/firestore";
 import { database } from "../config/firebase";
 import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
 

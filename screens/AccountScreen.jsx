@@ -9,7 +9,7 @@ import lightTheme from "../theme/lightTheme";
 import darkTheme from "../theme/darkTheme";
 
 // import auth from "@react-native-firebase/auth";
-import { getAuth, signOut } from "firebase/auth";
+import { getAuth, signOut, deleteUser } from "firebase/auth";
 import { database, storage } from "../config/firebase";
 import {
   collection,
@@ -19,7 +19,12 @@ import {
   onSnapshot,
   where,
 } from "firebase/firestore";
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import {
+  ref,
+  uploadBytes,
+  getDownloadURL,
+  deleteObject,
+} from "firebase/storage";
 import * as ImagePicker from "expo-image-picker";
 
 // Swtich color scheme based on system settings
@@ -110,6 +115,24 @@ export default function AccountScreen() {
     });
     setChangeDescription(false);
   }
+
+  async function deleteAccount() {
+    const accountRef = doc(database, "users", auth.currentUser.uid);
+    await updateDoc(accountRef, {
+      photoURL: null,
+      displayName: null,
+      description: null,
+    });
+    const desertRef = ref(storage, `userImages/${auth.currentUser.uid}`);
+    deleteObject(desertRef);
+    deleteUser(auth.currentUser)
+      .then((el) => {
+        navigation.navigate("Login");
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  }
   return (
     <View style={styles.container}>
       <StatusBar
@@ -130,10 +153,7 @@ export default function AccountScreen() {
           >
             Edit image
           </Button>
-          <Text
-            variant="headlineMedium"
-            // style={{ display: changeDescription ? "none" : "flex" }}
-          >
+          <Text variant="headlineMedium" style={{ marginBottom: 20 }}>
             {name}
           </Text>
           <Text
@@ -145,12 +165,16 @@ export default function AccountScreen() {
           >
             Description:
           </Text>
-          <Text
-            variant="titleMedium"
-            style={{ display: changeDescription ? "none" : "flex" }}
-          >
-            {description}
-          </Text>
+          <View style={{ width: "80%" }}>
+            <Text
+              variant="titleMedium"
+              style={{
+                display: changeDescription ? "none" : "flex",
+              }}
+            >
+              {description}
+            </Text>
+          </View>
         </View>
         <View
           style={{
@@ -192,7 +216,7 @@ export default function AccountScreen() {
               style={{
                 alignItems: "center",
                 justifyContent: "center",
-                marginTop: 50,
+                marginTop: 30,
               }}
             >
               <Button
@@ -231,6 +255,16 @@ export default function AccountScreen() {
             }}
           >
             Log Out
+          </Button>
+          <Button
+            mode="contained-tonal"
+            theme={{ colors: colorTheme }}
+            style={{ marginBottom: 40 }}
+            onPress={() => {
+              deleteAccount();
+            }}
+          >
+            Delete account
           </Button>
         </View>
       </View>
